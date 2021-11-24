@@ -1,0 +1,21 @@
+{% extends "base.html"%}
+{% block title%}Secret{% endblock %}
+
+{% block content %}
+<h1>This is your information {{current_user.first_name}}</h1>
+<ul>
+    <li>username: {{current_user.username}}</li>
+    <li>email: {{current_user.email}}</li>
+    <li>first_name: {{current_user.first_name}}</li>
+    <li>last_name: {{current_user.last_name}}</li>
+</ul>
+{% endblock %}
+
+{% block links %}
+{% if session["username"] %}
+
+<form action="/logout" method="POST">
+    <button type="submit">Log out {{current_user.first_name}}</button>
+</form>
+{% endif %}
+{% endblock %}

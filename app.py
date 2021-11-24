@@ -19,10 +19,18 @@ app.debug = True
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
-
-@app.route("/secret")
+@app.route("/")
 def home():
-    return "This is the secret page!"
+    return render_template("base.html")
+
+@app.route("/users/<username>")
+def user_info(username):
+    """Displays information about the current user"""
+    if session["username"]:
+        current_user = User.query.get_or_404(username)
+        return render_template("users.html", current_user=current_user)
+    else:
+        flash("Please log in")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -47,7 +55,7 @@ def register():
             return render_template("/register", form=form)
 
         session["username"] = username
-        return redirect("/secret")
+        return redirect(f"/users/{username}")
     else:
         return render_template("register.html", form=form)
 
@@ -63,11 +71,18 @@ def login():
 
         if current_user:
             session["username"] = username
-            return redirect("/secret")
+            return redirect(f"/users/{username}")
         else:
             form.username.errors = ["Incorrect credentials"]
             return render_template("login.html", form=form)
     else:
         return render_template("login.html", form=form)
+
+@app.route("/logout", methods=["POST"])
+def log_out():
+    """remove current user from session"""
+    session.pop("username")
+    return redirect("/login")
+
 
 
