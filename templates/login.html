@@ -1,11 +1,12 @@
+{% extends "base.html"%}
+    {% block title %} Login page {% endblock %}
 
-    {% extends "base.html"%}
-    
     {% block content %}
-    <h1>Register to give some feedback! </h1>
+    <h1>Log in </h1>
     <form action="" method="POST">
         
     {{form.hidden_tag()}}
+
     {% for field in form if field.widget.input_type != 'hidden' %}
     <p>
         {{ field.label }}
@@ -16,6 +17,7 @@
         {% endfor %}
     </p>
     {% endfor %}
+    
     <button type="submit"> Submit </button>
     </form>
     {% endblock %}

@@ -12,3 +12,9 @@ class FeedbackForm(FlaskForm):
     first_name=StringField("First name", validators=[InputRequired()])
     last_name=StringField("Last name", validators=[InputRequired()])
 
+class LoginForm(FlaskForm):
+    """Form for loging in"""
+    username=StringField("username", validators=[InputRequired()])
+    password=PasswordField("password", validators=[InputRequired()])
+
+
