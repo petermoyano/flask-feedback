@@ -1,6 +1,7 @@
 from enum import unique
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt, check_password_hash
+from sqlalchemy.orm import backref
 
 
 
@@ -15,13 +16,14 @@ def connect_db(app):
 
 
 class User(db.Model):
-    """represents the table users with their login information"""
+    """Represents the table users with their login information"""
     __tablename__="users"
     username = db.Column(db.String(20), unique=True, primary_key=True)
     password = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
+    feedback = db.relationship('Feedback', backref='user', cascade="all,delete")
 
     @classmethod
     def register(cls, username, password, email, first_name, last_name):
@@ -38,4 +40,20 @@ class User(db.Model):
             return current_user
         else:
             return False
+#    @classmethod
+#    def delete(cls, username):
+#        """Delete the user from the db"""
+#        current_user = User.query.filter_by(username=username).delete()
+#        db.session.commit()
+
+class Feedback(db.Model):
+    """Feedbacks table with source information"""
+    __tablename__="feedbacks"
+    id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(50), nullable=False)
+    content = db.Column(db.String(500), nullable=False)
+    username = db.Column(db.Text, db.ForeignKey('users.username')) 
+
+
+
         

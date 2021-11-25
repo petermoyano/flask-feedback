@@ -1,13 +1,11 @@
 {% extends "base.html"%}
-    {% block title %} Login page {% endblock %}
+{% block title%}Give some feedback!{% endblock %}
 
-    {% block content %}
-    <h1>Log in </h1>
-    
+{% block content %}
+    <h1>Fill this form to give some feedback! </h1>
     <form action="" method="POST">
         
     {{form.hidden_tag()}}
-
     {% for field in form if field.widget.input_type != 'hidden' %}
     <p>
         {{ field.label }}
@@ -18,10 +16,15 @@
         {% endfor %}
     </p>
     {% endfor %}
-
-    <button type="submit"> Log in </button>
+    <button type="submit"> Submit </button>
     </form>
     {% endblock %}
-    {% block links%}
-    <a href="/register">Register or Sign Up</a>
-    {% endblock %}
+
+    {% block links %}
+{% if session["username"] %}
+
+<form action="/logout" method="POST">
+    <button type="submit">Log out </button>
+</form>
+{% endif %}
+{% endblock %}

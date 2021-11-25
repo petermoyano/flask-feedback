@@ -1,10 +1,10 @@
 from flask import Flask, render_template, redirect, flash, session, request
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
-from models import db, connect_db, User
+from models import Feedback, db, connect_db, User
 from forms import FeedbackForm, LoginForm
 from sqlalchemy.exc import IntegrityError
-
+from werkzeug.exceptions import Unauthorized
 
 
 app = Flask(__name__)
@@ -19,24 +19,31 @@ app.debug = True
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+
 @app.route("/")
 def home():
-    return render_template("base.html")
+    """Home page"""
+    if session["username"]:
+        current_user = session["username"]
+        flash("redirected to your user profile page")
+        return redirect(f"/users/{current_user}")
+    else:
+        return render_template("base.html")
 
 @app.route("/users/<username>")
 def user_info(username):
     """Displays information about the current user"""
-    if session["username"]:
+    current_user = session["username"]
+    if current_user == username:
         current_user = User.query.get_or_404(username)
         return render_template("users.html", current_user=current_user)
     else:
-        flash("Please log in")
+        flash("Please check your credentials and permissions, redirected to your user profile")
+        return redirect(f"/users/{current_user}")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Show a form that when submitted will register/create a user. 
-    This form should accept a username, password, email, first_name, and last_name.
-    """
+    """Show a form that when submitted will register/create a user"""
     form = FeedbackForm()
     if form.validate_on_submit():
         username=form.username.data
@@ -80,9 +87,76 @@ def login():
 
 @app.route("/logout", methods=["POST"])
 def log_out():
-    """remove current user from session"""
+    """Remove current user from session"""
     session.pop("username")
     return redirect("/login")
+
+
+
+@app.route("/users/<username>/delete", methods=["POST"])
+def delete_user(username):
+    """Delete a user if it coincides with the one in the session"""
+    if "username" not in session or username != session['username']:
+        raise Unauthorized()
+
+    user = User.query.get(username)
+    db.session.delete(user)
+    db.session.commit()
+    session.pop("username")
+
+    return redirect("/login")
+
+@app.route("/users/<username>/feedback/add", methods=["POST", "GET"])
+def feedback(username):
+    """ Display a form to add feedback"""
+    form=FeedbackForm()
+    if form.validate_on_submit():
+        title=form.title.data
+        content=form.content.data
+        if session["username"] == username:
+            fb = Feedback(title=title, content=content, username=username)
+            db.session.add(fb)
+            db.session.commit()
+            return redirect(f"/users/{username}")
+        else:
+            form.username.errors = ["Cannot create a feedback using another username"]
+            return render_template(f"/users/{username}")
+    else:
+        return render_template("feedback.html", form=form)
+
+@app.route("/feedback/<id>/update", methods=["GET", "POST"])
+def edit_feedback(id):
+    """Display a form to edit feedback """
+    fb = Feedback.query.get_or_404(id)
+    current_user = session["username"]
+    form=FeedbackForm(obj=fb)
+    if fb.username == current_user:
+        if  form.validate_on_submit():
+            fb.title = form.title.data
+            fb.content = form.content.data
+            db.session.commit()
+            current_user = User.query.get(session["username"])
+            flash("Your feedback has been updated!")
+            return redirect(f"/users/{current_user}")
+        else:
+            return render_template("edit_feedback.html", form=form, current_user=current_user)
+    else:
+        flash("Cannot edit other users feedback")
+        return redirect(f"/users/{current_user}")
+
+@app.route("/feedback/id/delete", methods=["POST"])
+def delete_feedback(id):
+    """Delete a certain feedback"""
+    fb = Feedback.query.get_or_404(id)
+    current_user = session["username"]
+    if fb.username == current_user:
+        db.session.delete(id)
+        db.session.commit()
+        flash("Feedback deleted!")
+        return redirect(f"/users/{current_user}")
+    else:
+        flash("You cannot delete other people's feedback.")
+        return redirect(f"/users/{current_user}")
 
 
 

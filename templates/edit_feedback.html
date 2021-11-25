@@ -1,0 +1,39 @@
+{%extends "base.html"%}
+{% block title%}Edit feedback{% endblock%}
+{% block content%}
+<h1>Edit feedback </h1>
+    
+    <form action="" method="POST">
+        
+    {{form.hidden_tag()}}
+
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <p>
+        {{ field.label }}
+        {{ field }}
+
+        {% for error in field.errors %}
+        {{ error }}
+        {% endfor %}
+    </p>
+    {% endfor %}
+
+    <button type="submit"> Edit this feedback </button>
+    </form>
+{% endblock%}
+
+
+{% block links %}
+{% if session["username"] %}
+
+<form action="/logout" method="POST">
+    <button type="submit">Log out {{current_user.first_name}}</button>
+</form>
+<form action="/users/{{current_user.username}}/delete" method="POST">
+    <button type="submit">{{current_user.first_name}} delete your user</button>
+</form>
+<form action="/users/{{current_user.username}}/feedback/add">
+    <button type="submit">Give some feedback {{current_user.first_name}}</button>
+</form>
+{% endif %}
+{% endblock %}
